@@ -19,13 +19,15 @@ class Ticket {
 
   factory Ticket.fromJson(Map<String, dynamic> json) {
     return Ticket(
-      id: json['id'],
-      plateNumber: json['plateNumber'],
-      slotId: json['slotId'],
-      timeIn: json['timeIn'],
-      timeOut: json['timeOut'],
-      durationHours: json['durationHours'],
-      totalAmount: json['totalAmount']?.toDouble(),
+      id: json["id"] ?? 0,  // if backend sends null, default to 0
+      plateNumber: json["plateNumber"] ?? "",
+      slotId: json["slotId"] ?? "",
+      timeIn: json["timeIn"] ?? "",
+      timeOut: json["timeOut"],
+      durationHours: json["durationHours"],
+      totalAmount: json["totalAmount"] == null
+          ? null
+          : (json["totalAmount"] as num).toDouble(),
     );
   }
 }

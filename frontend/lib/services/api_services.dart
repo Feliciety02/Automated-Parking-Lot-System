@@ -13,13 +13,18 @@ class ApiService {
     return data.map((s) => Slot.fromJson(s)).toList();
   }
 
-  Future<Ticket> createTicket(String plate) async {
-    final res = await http.post(
-      Uri.parse("$baseUrl/tickets"),
-      body: {"plate_number": plate},
-    );
-    return Ticket.fromJson(jsonDecode(res.body));
-  }
+Future<Ticket> createTicket(String plate) async {
+  final res = await http.post(
+    Uri.parse("$baseUrl/tickets"),
+    headers: {"Content-Type": "application/json"},
+    body: jsonEncode({"plateNumber": plate}),
+  );
+
+  print("DEBUG RESPONSE: ${res.body}");
+
+  return Ticket.fromJson(jsonDecode(res.body));
+}
+
 
   Future<Ticket> exitTicket(int id) async {
     final res = await http.put(Uri.parse("$baseUrl/tickets/$id/exit"));
@@ -31,4 +36,10 @@ class ApiService {
     List data = jsonDecode(res.body);
     return data.map((t) => Ticket.fromJson(t)).toList();
   }
+
+  Future<Ticket> lostTicket(int id) async {
+  final res = await http.put(Uri.parse("$baseUrl/tickets/$id/lost"));
+  return Ticket.fromJson(jsonDecode(res.body));
+}
+
 }
