@@ -1,66 +1,66 @@
 from datetime import datetime
 import math
-from app.database import tickets
-from app.services.slot_service import occupy_slot, free_slot, find_nearest_available_slot
+from app.database.db import SessionLocal, TicketModel
 
-def create_ticket(plate_number: str):
-    ticket_id = len(tickets) + 1
-
-    slot_id = find_nearest_available_slot()
-    if slot_id is None:
-        return None  # No available slots
-
-    occupy_slot(slot_id)
-
-    time_in = datetime.now().isoformat()
-
-    ticket = {
-        "id": ticket_id,
-        "plateNumber": plate_number,
-        "slotId": slot_id,
-        "timeIn": time_in,
-        "timeOut": None,
-        "durationHours": None,
-        "totalAmount": None
-    }
-
-    tickets[ticket_id] = ticket
+# Create ticket
+def create_ticket(plate_number: str, slot_id: str):
+    db = SessionLocal()
+    ticket = TicketModel(
+        plateNumber=plate_number,
+        slotId=slot_id,
+        timeIn=datetime.now()
+    )
+    db.add(ticket)
+    db.commit()
+    db.refresh(ticket)
+    db.close()
     return ticket
 
-
+# Exit ticket (normal payment)
 def exit_ticket(ticket_id: int):
-    ticket = tickets.get(ticket_id)
+    db = SessionLocal()
+    ticket = db.query(TicketModel).filter(TicketModel.id == ticket_id).first()
+
     if not ticket:
+        db.close()
         return None
 
-    if ticket["timeOut"] is not None:
-        return ticket  # already processed
-
-    time_out = datetime.now()
-    ticket["timeOut"] = time_out.isoformat()
-
-    time_in_obj = datetime.fromisoformat(ticket["timeIn"])
-    duration = (time_out - time_in_obj).total_seconds() / 3600
+    ticket.timeOut = datetime.now()
+    duration = (ticket.timeOut - ticket.timeIn).total_seconds() / 3600
     hours = math.ceil(duration)
 
-    ticket["durationHours"] = hours
-    ticket["totalAmount"] = hours * 20
+    base_hours = 3
+    base_rate = 40
+    extra_rate = 20
 
-    free_slot(ticket["slotId"])
+    if hours <= base_hours:
+        ticket.totalAmount = base_rate
+    else:
+        ticket.totalAmount = base_rate + (hours - base_hours) * extra_rate
+
+    ticket.durationHours = hours
+    db.commit()
+    db.refresh(ticket)
+    db.close()
+
     return ticket
 
+# Lost ticket
 def lost_ticket(ticket_id: int):
-    if ticket_id not in tickets:
+    db = SessionLocal()
+    ticket = db.query(TicketModel).filter(TicketModel.id == ticket_id).first()
+
+    if not ticket:
+        db.close()
         return None
 
-    ticket = tickets[ticket_id]
+    ticket.timeOut = datetime.now()
+    ticket.totalAmount = 150
+    ticket.lostTicket = True
+    ticket.durationHours = None
 
-    # Lost ticket fee (standard mall rate)
-    lost_fee = 150
-
-    ticket["timeOut"] = datetime.now().isoformat()
-    ticket["durationHours"] = None  # duration not applicable for lost ticket
-    ticket["totalAmount"] = lost_fee
-    ticket["lostTicket"] = True
+    db.commit()
+    db.refresh(ticket)
+    db.close()
 
     return ticket

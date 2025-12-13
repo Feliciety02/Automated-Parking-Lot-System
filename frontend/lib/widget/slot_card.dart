@@ -8,12 +8,33 @@ class SlotCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool occupied = !slot.isAvailable;
+
     return Card(
-      color: slot.isOccupied ? Colors.red : Colors.green,
+      color: occupied ? Colors.red[300] : Colors.green[300],
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 4,
       child: Center(
-        child: Text(
-          slot.id,
-          style: const TextStyle(fontSize: 24, color: Colors.white),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              slot.slotId,
+              style: const TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              occupied ? "Occupied" : "Available",
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
       ),
     );

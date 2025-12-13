@@ -1,16 +1,16 @@
 class Slot {
-  final String id;
-  final bool isOccupied;
+  final String slotId;
+  final bool isAvailable;
 
   Slot({
-    required this.id,
-    required this.isOccupied,
+    required this.slotId,
+    required this.isAvailable,
   });
 
   factory Slot.fromJson(Map<String, dynamic> json) {
     return Slot(
-      id: json['id'],
-      isOccupied: json['isOccupied'],
+      slotId: json["slot_id"] ?? "",              // backend uses slot_id
+      isAvailable: (json["is_available"] == 1),    // SQLite returns 0 or 1
     );
   }
 }

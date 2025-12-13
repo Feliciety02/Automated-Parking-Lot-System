@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes import tickets, slots
+from app.database.db import init_db
 
 app = FastAPI()
 
@@ -11,6 +12,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Initialize database on startup
+@app.on_event("startup")
+def startup_event():
+    init_db()
+    print("Database initialized")
 
 # Register endpoints
 app.include_router(tickets.router)
